@@ -24,6 +24,9 @@ interface EditorState {
   updateProps: (id: string, props: Record<string, unknown>) => void;
   removeBlock: (id: string) => void;
   insertBlock: (block: BlockNode, index?: number) => void;
+  moveBlock: (activeId: string, overId: string) => void;
+  duplicateBlock: (id: string) => void;
+  findBlock: (id: string) => BlockNode | undefined;
 
   undo: () => void;
   redo: () => void;
@@ -42,6 +45,23 @@ function removeNode(nodes: BlockNode[], id: string): BlockNode[] {
   return nodes
     .filter((n) => n.id !== id)
     .map((n) => ({ ...n, children: removeNode(n.children, id) }));
+}
+
+function findNode(nodes: BlockNode[], id: string): BlockNode | undefined {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    const found = findNode(n.children, id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+function cloneWithNewIds(node: BlockNode): BlockNode {
+  return {
+    ...node,
+    id: `blk_${Math.random().toString(36).slice(2, 10)}`,
+    children: node.children.map(cloneWithNewIds),
+  };
 }
 
 export const useEditor = create<EditorState>((set, get) => ({
@@ -75,7 +95,30 @@ export const useEditor = create<EditorState>((set, get) => ({
     const next = [...get().content];
     next.splice(index ?? next.length, 0, block);
     get().setContent(next);
+    set({ selectedId: block.id });
   },
+
+  // Reorders top-level sections (the primary drag target on the canvas).
+  moveBlock: (activeId, overId) => {
+    const nodes = get().content;
+    const from = nodes.findIndex((n) => n.id === activeId);
+    const to = nodes.findIndex((n) => n.id === overId);
+    if (from === -1 || to === -1 || from === to) return;
+    const next = [...nodes];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved!);
+    get().setContent(next);
+  },
+
+  duplicateBlock: (id) => {
+    const original = findNode(get().content, id);
+    if (!original) return;
+    const copy = cloneWithNewIds(original);
+    const index = get().content.findIndex((n) => n.id === id);
+    get().insertBlock(copy, index === -1 ? undefined : index + 1);
+  },
+
+  findBlock: (id) => findNode(get().content, id),
 
   undo: () =>
     set((s) => {

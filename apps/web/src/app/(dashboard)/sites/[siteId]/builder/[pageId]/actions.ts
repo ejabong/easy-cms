@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma } from '@easy-cms/db';
+import { prisma, type Prisma } from '@easy-cms/db';
 import { pageContentSchema } from '@easy-cms/core';
 import { requirePermission } from '@/lib/guards';
 
@@ -21,7 +21,9 @@ export async function savePage(input: {
 
   await requirePermission(site.organizationId, input.publish ? 'page:publish' : 'page:edit');
 
-  const content = pageContentSchema.parse(input.content);
+  // Validated, then cast to Prisma's JSON input type (the typed BlockNode[]
+  // shape isn't structurally a Prisma InputJsonValue).
+  const content = pageContentSchema.parse(input.content) as unknown as Prisma.InputJsonValue;
 
   const lastVersion = await prisma.pageVersion.findFirst({
     where: { pageId: input.pageId },

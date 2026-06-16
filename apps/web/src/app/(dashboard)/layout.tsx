@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
 const NAV = [
-  ['Dashboard', '/dashboard'],
-  ['Templates', '/templates'],
-  ['Settings', '/settings'],
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Templates', href: '/templates' },
+  { label: 'Settings', href: '/settings' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             easy-cms
           </Link>
           <nav className="flex gap-4 text-sm">
-            {NAV.map(([label, href]) => (
+            {NAV.map(({ label, href }) => (
               <Link key={href} href={href} className="text-gray-600 hover:text-gray-900">
                 {label}
               </Link>

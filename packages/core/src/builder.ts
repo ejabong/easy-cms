@@ -46,7 +46,9 @@ export type BlockNode = {
   children: BlockNode[];
 };
 
-export const blockNodeSchema: z.ZodType<BlockNode> = z.lazy(() =>
+// Input type is widened to `unknown` because `.default()` on nested schemas
+// makes the parsed (output) type diverge from the accepted (input) type.
+export const blockNodeSchema: z.ZodType<BlockNode, z.ZodTypeDef, unknown> = z.lazy(() =>
   z.object({
     id: z.string(),
     type: z.string(),
