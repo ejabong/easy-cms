@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: 79 70 229; /* indigo-600 */
+  --color-secondary: 14 165 233; /* sky-500 */
+}
+
+html {
+  scroll-behavior: smooth;
+}
