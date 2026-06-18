@@ -66,8 +66,18 @@ export default async function SiteDashboard({ params }: { params: Promise<{ site
         </div>
       </div>
 
+      <nav className="mt-6 flex gap-4 border-b text-sm">
+        <span className="-mb-px border-b-2 border-primary pb-2 font-medium">Pages</span>
+        <Link
+          href={`/sites/${site.id}/collections`}
+          className="pb-2 text-gray-500 hover:text-gray-900"
+        >
+          Collections
+        </Link>
+      </nav>
+
       {/* Pages */}
-      <section className="mt-10">
+      <section className="mt-8">
         <h2 className="mb-3 text-lg font-semibold">Pages</h2>
         <ul className="divide-y rounded-lg border">
           {site.pages.map((page) => (
