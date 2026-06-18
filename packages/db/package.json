@@ -21,6 +21,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@easy-cms/core": "workspace:*",
     "@prisma/client": "^6.1.0"
   },
   "devDependencies": {

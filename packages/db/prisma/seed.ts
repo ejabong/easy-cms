@@ -1,4 +1,5 @@
-import { PrismaClient, Role, TemplateCategory } from '@prisma/client';
+import { PrismaClient, Prisma, Role, type TemplateCategory } from '@prisma/client';
+import { TEMPLATE_CATALOG } from '@easy-cms/core';
 
 const prisma = new PrismaClient();
 
@@ -85,19 +86,33 @@ async function main() {
     },
   });
 
-  // ── Marketplace templates ────────────────────────────────────────────
-  const templates: { name: string; slug: string; category: TemplateCategory }[] = [
-    { name: 'Modern Business', slug: 'modern-business', category: 'BUSINESS' },
-    { name: 'Creative Portfolio', slug: 'creative-portfolio', category: 'PORTFOLIO' },
-    { name: 'SaaS Landing', slug: 'saas-landing', category: 'LANDING_PAGE' },
-    { name: 'Minimal Blog', slug: 'minimal-blog', category: 'BLOG' },
-  ];
+  // ── Marketplace templates (from the shared catalog) ──────────────────
+  for (const blueprint of TEMPLATE_CATALOG) {
+    const template = await prisma.template.upsert({
+      where: { slug: blueprint.slug },
+      update: {
+        name: blueprint.name,
+        description: blueprint.description,
+        category: blueprint.category as TemplateCategory,
+        isPublished: true,
+        themeId: theme.id,
+      },
+      create: {
+        name: blueprint.name,
+        slug: blueprint.slug,
+        description: blueprint.description,
+        category: blueprint.category as TemplateCategory,
+        isPublished: true,
+        themeId: theme.id,
+      },
+    });
 
-  for (const t of templates) {
-    await prisma.template.upsert({
-      where: { slug: t.slug },
-      update: {},
-      create: { ...t, isPublished: true, themeId: theme.id },
+    // Store the blueprint manifest as a versioned snapshot.
+    const manifest = blueprint.manifest as unknown as Prisma.InputJsonValue;
+    await prisma.templateVersion.upsert({
+      where: { templateId_version: { templateId: template.id, version: blueprint.version } },
+      update: { manifest },
+      create: { templateId: template.id, version: blueprint.version, manifest },
     });
   }
 
